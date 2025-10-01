@@ -246,8 +246,18 @@ export class ChatComponent implements OnInit, OnDestroy {
     // Listen for messages read notification
     const messagesReadSub = this.chatService.onMessagesRead().subscribe((data) => {
       console.log('Messages read notification:', data);
-      // Reload unread counts when messages are read
-      this.loadUnreadCounts();
+      
+      // If the event includes updated unread counts, use them directly
+      if (data.unreadCounts) {
+        console.log('Updating unread counts from server:', data.unreadCounts);
+        this.unreadCounts = data.unreadCounts;
+      } else {
+        // Fallback: only reload unread counts if we're not currently viewing this conversation
+        // This prevents overriding our optimistic update when we're actively viewing the chat
+        if (!this.selectedUser || this.selectedUser.id !== data.receiverId) {
+          this.loadUnreadCounts();
+        }
+      }
     });
     this.subscriptions.push(messagesReadSub);
 
@@ -260,6 +270,12 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   selectUser(user: User): void {
     console.log('Selecting user:', user);
+    
+    // If switching to a different user, reload unread counts to ensure accuracy
+    if (this.selectedUser && this.selectedUser.id !== user.id) {
+      this.loadUnreadCounts();
+    }
+    
     this.selectedUser = user;
     this.messages = [];
     this.newMessage = '';
@@ -274,7 +290,7 @@ export class ChatComponent implements OnInit, OnDestroy {
       // Mark messages as read when user opens the conversation
       this.chatService.markAsRead(user.id, this.currentUser.id);
       
-      // Clear unread count for this user
+      // Clear unread count for this user immediately (optimistic update)
       this.unreadCounts[user.id] = 0;
     }
   }

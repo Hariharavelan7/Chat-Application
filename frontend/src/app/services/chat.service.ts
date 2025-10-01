@@ -113,9 +113,9 @@ export class ChatService {
     this.socket.emit('markAsRead', { senderId, receiverId });
   }
 
-  onMessagesRead(): Observable<{ receiverId: number }> {
+  onMessagesRead(): Observable<{ receiverId: number; unreadCounts?: { [senderId: number]: number } }> {
     return new Observable(observer => {
-      this.socket.on('messagesRead', (data: { receiverId: number }) => {
+      this.socket.on('messagesRead', (data: { receiverId: number; unreadCounts?: { [senderId: number]: number } }) => {
         console.log('Socket received messagesRead:', data);
         observer.next(data);
       });

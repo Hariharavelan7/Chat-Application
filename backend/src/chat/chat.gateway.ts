@@ -124,11 +124,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       await this.chatService.markMessagesAsRead(data.senderId, data.receiverId);
       
-      // Notify the sender that their messages have been read
+      // Get updated unread counts for the sender
+      const senderUnreadCounts = await this.chatService.getUnreadCounts(data.senderId);
+      
+      // Notify the sender that their messages have been read with updated counts
       const senderSocketId = this.connectedUsers.get(data.senderId);
       if (senderSocketId) {
         this.server.to(senderSocketId).emit('messagesRead', {
           receiverId: data.receiverId,
+          unreadCounts: senderUnreadCounts,
         });
       }
     } catch (error) {
