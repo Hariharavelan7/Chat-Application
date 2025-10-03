@@ -196,7 +196,7 @@ export class AuthComponent {
     private router: Router
   ) {
     this.authForm = this.fb.group({
-      name: ['', Validators.required],
+      name: [''],
       email: ['user1@example.com', [Validators.required, Validators.email]],
       password: ['password123', [Validators.required, Validators.minLength(6)]]
     });
@@ -209,14 +209,17 @@ export class AuthComponent {
   toggleMode(): void {
     this.isLogin = !this.isLogin;
     this.errorMessage = '';
-    
+
+    const nameControl = this.authForm.get('name');
+    if (!nameControl) return;
+
     if (this.isLogin) {
-      this.authForm.get('name')?.clearValidators();
-      this.authForm.get('name')?.updateValueAndValidity();
+      nameControl.clearValidators(); // Remove required validator in login mode
     } else {
-      this.authForm.get('name')?.setValidators([Validators.required]);
-      this.authForm.get('name')?.updateValueAndValidity();
+      nameControl.setValidators([Validators.required]); // Add it in register mode
     }
+
+    nameControl.updateValueAndValidity(); // Recalculate validity
   }
 
   onSubmit(): void {
